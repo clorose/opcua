@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import sys
 import asyncio
 import logging
@@ -5,7 +7,14 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                            QHBoxLayout, QPushButton, QLabel, QProgressBar, 
                            QDoubleSpinBox)
 from PyQt5.QtCore import QTimer
-from asyncua import Client, Node, ua  
+from asyncua import Client, Node, ua
+
+# 로그 설정
+
+load_dotenv()
+
+SERVER_IP = os.getenv("SERVER_IP", "localhost")
+SERVER_PORT = os.getenv("SERVER_PORT", "4840")
 
 logging.basicConfig(level=logging.INFO, 
                    format='%(asctime)s | %(message)s',
@@ -16,7 +25,7 @@ logging.getLogger("asyncua").setLevel(logging.WARNING)  # 불필요한 로그 �
 class AirConditionerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("에어컨 제어 시스템")
+        self.setWindowTitle("Air Conditioner Control")
         self.setMinimumSize(600, 400)
         
         # 메인 위젯과 레이아웃
@@ -29,7 +38,7 @@ class AirConditionerGUI(QMainWindow):
         
         # 온도 게이지
         temp_layout = QVBoxLayout()
-        self.temp_label = QLabel("현재 온도: --°C")
+        self.temp_label = QLabel("Current Temperature: --°C")
         self.temp_gauge = QProgressBar()
         self.temp_gauge.setRange(0, 400)  # 0~40도를 0~400으로 표시
         temp_layout.addWidget(self.temp_label)
@@ -37,7 +46,7 @@ class AirConditionerGUI(QMainWindow):
         
         # 습도 게이지
         humidity_layout = QVBoxLayout()
-        self.humidity_label = QLabel("현재 습도: --%")
+        self.humidity_label = QLabel("Current Humidity: --%")
         self.humidity_gauge = QProgressBar()
         self.humidity_gauge.setRange(0, 100)
         humidity_layout.addWidget(self.humidity_label)
@@ -48,8 +57,8 @@ class AirConditionerGUI(QMainWindow):
         
         # 전력 사용량과 전기 요금
         power_layout = QHBoxLayout()
-        self.power_label = QLabel("전력 사용량: -- kWh")
-        self.cost_label = QLabel("전기 요금: -- 원")
+        self.power_label = QLabel("Power Usage: -- kWh")
+        self.cost_label = QLabel("Electricity Cost: -- 원")
         power_layout.addWidget(self.power_label)
         power_layout.addWidget(self.cost_label)
         
@@ -57,7 +66,7 @@ class AirConditionerGUI(QMainWindow):
         control_layout = QHBoxLayout()
         
         # 전원 버튼
-        self.power_button = QPushButton("전원 OFF")
+        self.power_button = QPushButton("Power OFF")
         self.power_button.setCheckable(True)
         self.power_button.clicked.connect(self.on_power_clicked)
         
@@ -67,9 +76,9 @@ class AirConditionerGUI(QMainWindow):
         self.temp_spinbox.setRange(18, 30)
         self.temp_spinbox.setValue(24)
         self.temp_spinbox.setSingleStep(0.5)
-        self.set_temp_button = QPushButton("온도 설정")
+        self.set_temp_button = QPushButton("Set Temperature")
         self.set_temp_button.clicked.connect(self.on_temp_clicked)
-        temp_control_layout.addWidget(QLabel("목표 온도:"))
+        temp_control_layout.addWidget(QLabel("Target Temperature:"))
         temp_control_layout.addWidget(self.temp_spinbox)
         temp_control_layout.addWidget(self.set_temp_button)
         
@@ -95,7 +104,9 @@ class AirConditionerGUI(QMainWindow):
     async def setup_client(self):
         try:
             _logger.info("서버에 연결 시도 중...")
-            self.client = Client("opc.tcp://localhost:4840/freeopcua/server/")
+            server_url = f"opc.tcp://{SERVER_IP}:{SERVER_PORT}/freeopcua/server/"
+            _logger.info(f"서버 주소: {server_url}")
+            self.client = Client(server_url)
             await self.client.connect()
             
             # namespace 인덱스 가져오기
@@ -117,7 +128,7 @@ class AirConditionerGUI(QMainWindow):
             
             # 현재 전원 상태 확인 및 버튼 상태 동기화
             self.power_button.setChecked(current_power)
-            self.power_button.setText("전원 ON" if current_power else "전원 OFF")
+            self.power_button.setText("Power ON" if current_power else "Power OFF")
             
             # 모니터링 노드들도 같은 방식으로 접근
             temp_node = await self.client.nodes.root.get_child(
@@ -147,18 +158,18 @@ class AirConditionerGUI(QMainWindow):
         try:
             name = (await node.read_browse_name()).Name
             if name == "CurrentTemperature":
-                self.temp_label.setText(f"현재 온도: {val:.1f}°C")
+                self.temp_label.setText(f"Current Temp: {val:.1f}°C")
                 self.temp_gauge.setValue(int(val * 10))
             elif name == "Humidity":
-                self.humidity_label.setText(f"현재 습도: {val:.1f}%")
+                self.humidity_label.setText(f"Current Humidity: {val:.1f}%")
                 self.humidity_gauge.setValue(int(val))
             elif name == "PowerUsage":
-                self.power_label.setText(f"전력 사용량: {val:.2f} kWh")
+                self.power_label.setText(f"Power Usage: {val:.1f} kWh")
             elif name == "ElectricityCost":
-                self.cost_label.setText(f"전기 요금: {int(val):,} 원")
+                self.cost_label.setText(f"Elec. Cost: {val} KRW")
             elif name == "Power":
                 self.power_button.setChecked(val)
-                self.power_button.setText("전원 ON" if val else "전원 OFF")
+                self.power_button.setText("Power ON" if val else "Power OFF")
         except Exception as e:
             _logger.error(f"데이터 업데이트 오류: {e}", exc_info=True)
 
@@ -184,12 +195,12 @@ class AirConditionerGUI(QMainWindow):
                 new_state = await self.nodes['Power'].read_value()
                 _logger.info(f"New power state: {new_state}")
                 
-                self.power_button.setText("전원 ON" if new_state else "전원 OFF")
+                self.power_button.setText("Power ON" if new_state else "Power OFF")
                 self.power_button.setChecked(new_state)
             except Exception as e:
                 _logger.error(f"전원 제어 오류: {e}", exc_info=True)
                 self.power_button.setChecked(not is_on)
-                self.power_button.setText("전원 ON" if not is_on else "전원 OFF")
+                self.power_button.setText("Power ON" if not is_on else "Power OFF")
 
     async def set_temperature(self):
         if self.nodes.get('TargetTemperature'):
