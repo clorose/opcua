@@ -13,7 +13,7 @@ from asyncua import Client, Node, ua
 
 load_dotenv()
 
-SERVER_IP = os.getenv("SERVER_IP", "localhost")
+SERVER_HOST = os.getenv("SERVER_HOST", "localhost")
 SERVER_PORT = os.getenv("SERVER_PORT", "4840")
 
 logging.basicConfig(level=logging.INFO, 
@@ -104,7 +104,7 @@ class AirConditionerGUI(QMainWindow):
     async def setup_client(self):
         try:
             _logger.info("서버에 연결 시도 중...")
-            server_url = f"opc.tcp://{SERVER_IP}:{SERVER_PORT}/freeopcua/server/"
+            server_url = f"opc.tcp://{SERVER_HOST}:{SERVER_PORT}/freeopcua/server/"
             _logger.info(f"서버 주소: {server_url}")
             self.client = Client(server_url)
             await self.client.connect()
