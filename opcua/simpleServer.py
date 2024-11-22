@@ -1,3 +1,6 @@
+# path: opcua/simpleServer.py
+# description: OPC UA 서버를 구현하는 간단한 예제 코드
+
 import asyncio
 import logging
 from asyncua import Server, ua
