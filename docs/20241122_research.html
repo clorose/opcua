@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>OPC-UA Tutorial</title>
+  <style>
+    /* From extension vscode.github */
+    /*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+    .vscode-dark img[src$=\#gh-light-mode-only],
+    .vscode-light img[src$=\#gh-dark-mode-only],
+    .vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+    .vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+      display: none;
+    }
+  </style>
+
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+  <style>
+    .task-list-item {
+      list-style-type: none;
+    }
+
+    .task-list-item-checkbox {
+      margin-left: -20px;
+      vertical-align: middle;
+      pointer-events: none;
+    }
+  </style>
+  <style>
+    :root {
+      --color-note: #0969da;
+      --color-tip: #1a7f37;
+      --color-warning: #9a6700;
+      --color-severe: #bc4c00;
+      --color-caution: #d1242f;
+      --color-important: #8250df;
+    }
+  </style>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-note: #2f81f7;
+        --color-tip: #3fb950;
+        --color-warning: #d29922;
+        --color-severe: #db6d28;
+        --color-caution: #f85149;
+        --color-important: #a371f7;
+      }
+    }
+  </style>
+  <style>
+    .markdown-alert {
+      padding: 0.5rem 1rem;
+      margin-bottom: 16px;
+      color: inherit;
+      border-left: .25em solid #888;
+    }
+
+    .markdown-alert>:first-child {
+      margin-top: 0
+    }
+
+    .markdown-alert>:last-child {
+      margin-bottom: 0
+    }
+
+    .markdown-alert .markdown-alert-title {
+      display: flex;
+      font-weight: 500;
+      align-items: center;
+      line-height: 1
+    }
+
+    .markdown-alert .markdown-alert-title .octicon {
+      margin-right: 0.5rem;
+      display: inline-block;
+      overflow: visible !important;
+      vertical-align: text-bottom;
+      fill: currentColor;
+    }
+
+    .markdown-alert.markdown-alert-note {
+      border-left-color: var(--color-note);
+    }
+
+    .markdown-alert.markdown-alert-note .markdown-alert-title {
+      color: var(--color-note);
+    }
+
+    .markdown-alert.markdown-alert-important {
+      border-left-color: var(--color-important);
+    }
+
+    .markdown-alert.markdown-alert-important .markdown-alert-title {
+      color: var(--color-important);
+    }
+
+    .markdown-alert.markdown-alert-warning {
+      border-left-color: var(--color-warning);
+    }
+
+    .markdown-alert.markdown-alert-warning .markdown-alert-title {
+      color: var(--color-warning);
+    }
+
+    .markdown-alert.markdown-alert-tip {
+      border-left-color: var(--color-tip);
+    }
+
+    .markdown-alert.markdown-alert-tip .markdown-alert-title {
+      color: var(--color-tip);
+    }
+
+    .markdown-alert.markdown-alert-caution {
+      border-left-color: var(--color-caution);
+    }
+
+    .markdown-alert.markdown-alert-caution .markdown-alert-title {
+      color: var(--color-caution);
+    }
+  </style>
+
+</head>
+
+<body class="vscode-body vscode-light">
+  <h1 id="opc-ua-tutorial">OPC-UA Tutorial</h1>
+  <h2 id="1-소개-및-장단점">1. 소개 및 장단점</h2>
+  <h3 id="소개"><strong>소개</strong></h3>
+  <ul>
+    <li><strong>OPC-UA</strong>는 <strong>Open Platform Communications Unified Architecture</strong>의 약자로, <strong>산업
+        자동화</strong>와 <strong>IoT</strong> 환경에서 널리 사용되는 <strong>통신 프로토콜</strong>입니다.</li>
+    <li><strong>플랫폼 독립성</strong>: 다양한 운영체제(Windows, Linux, Android, iOS)와 프로그래밍 언어(C, C++, Java, Python)를 지원.</li>
+    <li><strong>IEC 62541 표준</strong>에 기반하며, 다양한 장비와 시스템 간 <strong>상호 운용성</strong>을 보장.</li>
+    <li><strong>다양한 통신 프로토콜</strong>(TCP/IP, HTTPS, MQTT, AMQP 등) 및 강력한 <strong>보안 기능</strong>을 제공.</li>
+  </ul>
+  <hr>
+  <h3 id="장점"><strong>장점</strong></h3>
+  <ol>
+    <li><strong>플랫폼 독립성</strong>: 운영체제 및 언어 제약 없이 사용 가능.</li>
+    <li><strong>확장성 및 유연성</strong>: IoT 및 클라우드 환경과의 통합 적합.</li>
+    <li><strong>보안성</strong>: 암호화, 인증, 권한 제어 등의 내장 보안.</li>
+    <li><strong>표준 준수</strong>: 다양한 제조업체 장비 간 호환성 보장.</li>
+    <li><strong>다양한 통신 프로토콜</strong>: 최신 IoT 프로토콜과 호환 가능.</li>
+    <li><strong>실시간 및 히스토리 데이터 지원</strong>: 데이터 모니터링과 기록 가능.</li>
+  </ol>
+  <hr>
+  <h3 id="단점"><strong>단점</strong></h3>
+  <ol>
+    <li><strong>성능 문제</strong>: 대량의 데이터 처리 시 리소스 과소비.</li>
+    <li><strong>비용</strong>: 고급 기능 구현 시 추가 비용 부담.</li>
+    <li><strong>호환성 문제</strong>: 서버와 클라이언트의 버전 불일치 문제.</li>
+    <li><strong>초기 설정의 어려움</strong>: 기존 시스템과의 통합이 복잡할 수 있음.</li>
+  </ol>
+  <hr>
+  <h2 id="2-opc-ua-프로젝트-구조">2. OPC-UA 프로젝트 구조</h2>
+  <h3 id="기본-프로젝트-구조"><strong>기본 프로젝트 구조</strong></h3>
+  <ul>
+    <li><strong>OPC-UA 서버</strong>: 데이터를 제공하고 관리.</li>
+    <li><strong>OPC-UA 클라이언트</strong>: 데이터를 소비하고 명령을 전송.</li>
+    <li><strong>에어컨 시스템 예제</strong>:
+      <ul>
+        <li>서버: 에어컨 상태 및 제어.</li>
+        <li>클라이언트: 에어컨 상태 모니터링 및 제어 GUI.</li>
+      </ul>
+    </li>
+  </ul>
+  <hr>
+  <h2 id="3-opc-ua-서버-구축-및-코드-분석">3. OPC-UA 서버 구축 및 코드 분석</h2>
+  <h3 id="1-opc-ua-서버-구축">1. <strong>OPC-UA 서버 구축</strong></h3>
+  <pre><code class="language-python"><span class="hljs-keyword">from</span> asyncua <span class="hljs-keyword">import</span> Server, ua
+
+server = Server()
+<span class="hljs-keyword">await</span> server.init()
+
+<span class="hljs-comment"># 서버 설정</span>
+server.set_endpoint(<span class="hljs-string">&quot;opc.tcp://0.0.0.0:4840/freeopcua/server/&quot;</span>)
+server.set_server_name(<span class="hljs-string">&quot;Air Conditioner Control Server&quot;</span>)
+server.set_security_policy([ua.SecurityPolicyType.NoSecurity])  <span class="hljs-comment"># 테스트용 보안 정책</span>
+
+<span class="hljs-comment"># 네임스페이스 설정</span>
+uri = <span class="hljs-string">&quot;http://gaon.opcua.server&quot;</span>
+idx = <span class="hljs-keyword">await</span> server.register_namespace(uri)
+</code></pre>
+  <p><strong>설명</strong>:</p>
+  <ul>
+    <li><strong>서버 설정</strong>: 서버 이름, 엔드포인트 주소, 보안 정책 정의.</li>
+    <li><strong>네임스페이스</strong>: URI 등록 및 인덱스 생성.</li>
+    <li><strong><code>0.0.0.0</code></strong>: 모든 네트워크 인터페이스에서 접속 가능.</li>
+  </ul>
+  <hr>
+  <h3 id="2-에어컨-시스템-변수-정의">2. <strong>에어컨 시스템 변수 정의</strong></h3>
+  <pre><code class="language-python"><span class="hljs-comment"># 에어컨 객체 생성</span>
+ac_system = <span class="hljs-keyword">await</span> server.nodes.objects.add_object(idx, <span class="hljs-string">&quot;AirConditioner&quot;</span>)
+
+<span class="hljs-comment"># 제어 변수</span>
+power = <span class="hljs-keyword">await</span> ac_system.add_variable(idx, <span class="hljs-string">&quot;Power&quot;</span>, <span class="hljs-literal">False</span>)  <span class="hljs-comment"># 전원 상태</span>
+<span class="hljs-keyword">await</span> power.set_writable()
+target_temp = <span class="hljs-keyword">await</span> ac_system.add_variable(idx, <span class="hljs-string">&quot;TargetTemperature&quot;</span>, <span class="hljs-number">24.0</span>)  <span class="hljs-comment"># 목표 온도</span>
+<span class="hljs-keyword">await</span> target_temp.set_writable()
+
+<span class="hljs-comment"># 모니터링 변수</span>
+current_temp = <span class="hljs-keyword">await</span> ac_system.add_variable(idx, <span class="hljs-string">&quot;CurrentTemperature&quot;</span>, <span class="hljs-number">35.0</span>)
+humidity = <span class="hljs-keyword">await</span> ac_system.add_variable(idx, <span class="hljs-string">&quot;Humidity&quot;</span>, <span class="hljs-number">80.0</span>)
+power_usage = <span class="hljs-keyword">await</span> ac_system.add_variable(idx, <span class="hljs-string">&quot;PowerUsage&quot;</span>, <span class="hljs-number">0.0</span>)
+</code></pre>
+  <p><strong>설명</strong>:</p>
+  <ul>
+    <li><strong>제어 변수</strong>: <code>Power</code>와 <code>TargetTemperature</code>를 클라이언트가 수정 가능하도록 설정.</li>
+    <li><strong>모니터링 변수</strong>: <code>CurrentTemperature</code>, <code>Humidity</code>, <code>PowerUsage</code>는 읽기
+      전용.</li>
+  </ul>
+  <hr>
+  <h3 id="3-이벤트-처리-및-구독-설정">3. <strong>이벤트 처리 및 구독 설정</strong></h3>
+  <pre><code class="language-python"><span class="hljs-comment"># 이벤트 타입 정의</span>
+etype = <span class="hljs-keyword">await</span> server.create_custom_event_type(
+    idx, <span class="hljs-string">&quot;ACStateChange&quot;</span>, ua.ObjectIds.BaseEventType,
+    [
+        (<span class="hljs-string">&quot;CurrentTemperature&quot;</span>, ua.VariantType.Double),
+        (<span class="hljs-string">&quot;TargetTemperature&quot;</span>, ua.VariantType.Double),
+        (<span class="hljs-string">&quot;PowerState&quot;</span>, ua.VariantType.Boolean)
+    ]
+)
+
+<span class="hljs-comment"># 구독 설정</span>
+handler = SubscriptionHandler()
+subscription = <span class="hljs-keyword">await</span> server.create_subscription(<span class="hljs-number">500</span>, handler)
+<span class="hljs-keyword">await</span> subscription.subscribe_data_change([power, target_temp, current_temp])
+</code></pre>
+  <p><strong>설명</strong>:</p>
+  <ul>
+    <li><strong>이벤트 타입 정의</strong>: 에어컨 상태 변화 이벤트 정의.</li>
+    <li><strong>구독 설정</strong>: 클라이언트에서 <code>Power</code>, <code>TargetTemperature</code>,
+      <code>CurrentTemperature</code> 변경 이벤트를 구독.</li>
+  </ul>
+  <hr>
+  <h3 id="4-메인-제어-로직">4. <strong>메인 제어 로직</strong></h3>
+  <pre><code class="language-python"><span class="hljs-comment"># 냉방 제어 로직</span>
+<span class="hljs-keyword">if</span> is_power_on:
+    temp_diff = current_temp - target_temp
+    <span class="hljs-keyword">if</span> temp_diff &gt; <span class="hljs-number">0</span>:
+        cooling_rate = <span class="hljs-built_in">min</span>(<span class="hljs-number">1.5</span>, temp_diff * <span class="hljs-number">0.4</span>)
+        new_temp = <span class="hljs-built_in">max</span>(target_temp, current_temp - cooling_rate)
+        <span class="hljs-keyword">await</span> current_temp.write_value(<span class="hljs-built_in">round</span>(new_temp, <span class="hljs-number">1</span>))
+
+    <span class="hljs-comment"># 전력 사용량 계산</span>
+    base_power = <span class="hljs-number">3.0</span>
+    power_rate = base_power + temp_diff * <span class="hljs-number">0.4</span>
+    new_usage = power_usage + (power_rate / <span class="hljs-number">60</span>)
+    <span class="hljs-keyword">await</span> power_usage.write_value(<span class="hljs-built_in">round</span>(new_usage, <span class="hljs-number">2</span>))
+</code></pre>
+  <p><strong>설명</strong>:</p>
+  <ul>
+    <li><strong>냉방 제어</strong>: 목표 온도에 도달할 때까지 온도를 조정.</li>
+    <li><strong>전력 사용량 계산</strong>: 냉방에 따른 전력 소비량 업데이트.</li>
+  </ul>
+  <hr>
+  <h2 id="4-opc-ua-클라이언트-구축-및-코드-분석">4. OPC-UA 클라이언트 구축 및 코드 분석</h2>
+  <h3 id="1-opc-ua-클라이언트-gui">1. <strong>OPC-UA 클라이언트 GUI</strong></h3>
+  <pre><code class="language-python"><span class="hljs-keyword">from</span> PyQt5.QtWidgets <span class="hljs-keyword">import</span> QMainWindow, QLabel, QPushButton, QDoubleSpinBox
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">AirConditionerGUI</span>(<span class="hljs-title class_ inherited__">QMainWindow</span>):
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-built_in">super</span>().__init__()
+
+        <span class="hljs-comment"># 상태 표시 위젯</span>
+        self.temp_label = QLabel(<span class="hljs-string">&quot;Current Temperature: --°C&quot;</span>)
+        self.humidity_label = QLabel(<span class="hljs-string">&quot;Humidity: --%&quot;</span>)
+
+        <span class="hljs-comment"># 제어 위젯</span>
+        self.power_button = QPushButton(<span class="hljs-string">&quot;Power OFF&quot;</span>)
+        self.temp_spinbox = QDoubleSpinBox()
+        self.set_temp_button = QPushButton(<span class="hljs-string">&quot;Set Temperature&quot;</span>)
+</code></pre>
+  <p><strong>설명</strong>:</p>
+  <ul>
+    <li><strong>PyQt5</strong>를 사용하여 GUI 생성.</li>
+    <li><strong>상태 표시</strong>: 온도 및 습도 표시.</li>
+    <li><strong>제어 위젯</strong>: 전원 버튼 및 온도 설정.</li>
+  </ul>
+  <hr>
+  <h3 id="2-클라이언트-연결">2. 클라이언트 연결</h3>
+  <pre><code class="language-python"><span class="hljs-keyword">from</span> asyncua <span class="hljs-keyword">import</span> Client
+
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">setup_client</span>(<span class="hljs-params">self</span>):
+    server_url = <span class="hljs-string">&quot;opc.tcp://localhost:4840/freeopcua/server/&quot;</span>
+    self.client = Client(server_url)
+    <span class="hljs-keyword">await</span> self.client.connect()
+
+    <span class="hljs-comment"># 노드 접근</span>
+    self.nodes[<span class="hljs-string">&#x27;Power&#x27;</span>] = <span class="hljs-keyword">await</span> self.client.nodes.root.get_child(
+        [<span class="hljs-string">&quot;0:Objects&quot;</span>, <span class="hljs-string">f&quot;<span class="hljs-subst">{idx}</span>:AirConditioner&quot;</span>, <span class="hljs-string">f&quot;<span class="hljs-subst">{idx}</span>:Power&quot;</span>]
+    )
+</code></pre>
+  <p><strong>설명</strong>:</p>
+  <ul>
+    <li><strong>클라이언트 연결</strong>: 서버와 클라이언트 연결 설정.</li>
+    <li><strong>노드 접근</strong>: 서버의 특정 변수에 접근하여 제어 및 데이터 조회.</li>
+  </ul>
+  <hr>
+  <h3 id="3-데이터-변경-처리-및-제어">3. 데이터 변경 처리 및 제어</h3>
+  <pre><code class="language-python"><span class="hljs-comment"># 데이터 변경 처리</span>
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">datachange_notification</span>(<span class="hljs-params">self, node, val, data</span>):
+    name = (<span class="hljs-keyword">await</span> node.read_browse_name()).Name
+    <span class="hljs-keyword">if</span> name == <span class="hljs-string">&quot;CurrentTemperature&quot;</span>:
+        self.temp_label.setText(<span class="hljs-string">f&quot;Current Temperature: <span class="hljs-subst">{val:<span class="hljs-number">.1</span>f}</span>°C&quot;</span>)
+    <span class="hljs-keyword">elif</span> name == <span class="hljs-string">&quot;Power&quot;</span>:
+        self.power_button.setText(<span class="hljs-string">&quot;Power ON&quot;</span> <span class="hljs-keyword">if</span> val <span class="hljs-keyword">else</span> <span class="hljs-string">&quot;Power OFF&quot;</span>)
+
+<span class="hljs-comment"># 제어 명령</span>
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">toggle_power</span>(<span class="hljs-params">self</span>):
+    is_on = self.power_button.isChecked()
+    <span class="hljs-keyword">await</span> self.nodes[<span class="hljs-string">&#x27;Power&#x27;</span>].write_value(is_on)
+</code></pre>
+  <p><strong>설명</strong>:</p>
+  <ul>
+    <li><strong>데이터 변경 알림</strong>: 값이 변경될 때 GUI에 반영.</li>
+    <li><strong>제어 명령</strong>: 전원 상태 변경.</li>
+  </ul>
+  <hr>
+
+
+
+</body>
+
+</html>

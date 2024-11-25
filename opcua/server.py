@@ -1,3 +1,5 @@
+# path: opcua/server.py
+
 import asyncio
 import logging
 from asyncua import ua, Server
@@ -26,6 +28,15 @@ def delete_monitored_items(event, dispatcher):
     """클라이언트가 모니터링을 중단할 때 호출"""
     _logger.info("Client stopped monitoring items")
 
+def calculate_progressive_rate(usage):
+    """전력 사용량에 따른 누진세율 계산"""
+    if usage <= 200:
+        return 93.3
+    elif usage <= 400:
+        return 187.9
+    else:
+        return 280.6
+
 async def main():
     server = Server()
     await server.init()
@@ -33,30 +44,69 @@ async def main():
     # 서버 설정
     server.set_endpoint("opc.tcp://0.0.0.0:4840/freeopcua/server/")
     server.set_server_name("Air Conditioner Control Server")
-    
-    # 보안 정책 설정 (테스트용으로 NoSecurity만 사용)
     server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
 
     # namespace 설정
-    uri = "http://examples.freeopcua.github.io"
+    uri = "http://gaon.opcua.server"
     idx = await server.register_namespace(uri)
 
-    # 에어컨 시스템 객체 생성
-    ac_system = await server.nodes.objects.add_object(idx, "AirConditioner")
+    # 에어컨 시스템 객체 생성 (명시적 NodeId 사용)
+    objects = server.nodes.objects
+    ac_system = await objects.add_object(
+        ua.NodeId("AirConditioner", idx),
+        ua.QualifiedName("AirConditioner", idx)
+    )
     
-    # 제어 변수 (클라이언트에서 조작 가능)
-    power = await ac_system.add_variable(idx, "Power", False)
+    # 변수들 생성 (명시적 NodeId 사용)
+    power = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.Power", idx),
+        ua.QualifiedName("Power", idx),
+        False
+    )
     await power.set_writable()
-    target_temp = await ac_system.add_variable(idx, "TargetTemperature", 24.0)
+    
+    target_temp = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.TargetTemperature", idx),
+        ua.QualifiedName("TargetTemperature", idx),
+        24.0
+    )
     await target_temp.set_writable()
     
-    # 모니터링 변수들 (읽기 전용)
-    current_temp = await ac_system.add_variable(idx, "CurrentTemperature", 35.0)
-    humidity = await ac_system.add_variable(idx, "Humidity", 80.0)
-    power_usage = await ac_system.add_variable(idx, "PowerUsage", 0.0)
-    electricity_cost = await ac_system.add_variable(idx, "ElectricityCost", 0)
-    current_rate = await ac_system.add_variable(idx, "CurrentRate", 93.3)
-    operation_time = await ac_system.add_variable(idx, "OperationTime", 0)
+    current_temp = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.CurrentTemperature", idx),
+        ua.QualifiedName("CurrentTemperature", idx),
+        35.0
+    )
+    
+    humidity = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.Humidity", idx),
+        ua.QualifiedName("Humidity", idx),
+        80.0
+    )
+    
+    power_usage = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.PowerUsage", idx),
+        ua.QualifiedName("PowerUsage", idx),
+        0.0
+    )
+    
+    electricity_cost = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.ElectricityCost", idx),
+        ua.QualifiedName("ElectricityCost", idx),
+        0
+    )
+    
+    current_rate = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.CurrentRate", idx),
+        ua.QualifiedName("CurrentRate", idx),
+        93.3
+    )
+    
+    operation_time = await ac_system.add_variable(
+        ua.NodeId("AirConditioner.OperationTime", idx),
+        ua.QualifiedName("OperationTime", idx),
+        0
+    )
 
     # 이벤트 타입 생성
     etype = await server.create_custom_event_type(
@@ -72,14 +122,6 @@ async def main():
     
     # 이벤트 생성기 설정
     evgen = await server.get_event_generator(etype, ac_system)
-
-    def calculate_progressive_rate(usage):
-        if usage <= 200:
-            return 93.3
-        elif usage <= 400:
-            return 187.9
-        else:
-            return 280.6
 
     # 콜백 등록
     server.subscribe_server_callback(CallbackType.ItemSubscriptionCreated, create_monitored_items)

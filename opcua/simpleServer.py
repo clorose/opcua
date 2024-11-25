@@ -17,7 +17,7 @@ async def main():
     server.set_endpoint("opc.tcp://0.0.0.0:4840/freeopcua/server/")
 
     # namespace 설정
-    uri = "http://examples.freeopcua.github.io"
+    uri = "http://gaon.opcua.server"
     idx = await server.register_namespace(uri)
 
     # counter 객체/변수 생성

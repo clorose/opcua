@@ -1,13 +1,15 @@
+# path: opcua/client.py
+# description: OPC UA client for air conditioner control
+
 import os
 from dotenv import load_dotenv
 import sys
 import asyncio
 import logging
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                           QHBoxLayout, QPushButton, QLabel, QProgressBar, 
-                           QDoubleSpinBox)
-from PyQt5.QtCore import QTimer
-from asyncua import Client, Node, ua
+                        QHBoxLayout, QPushButton, QLabel, QProgressBar, 
+                        QDoubleSpinBox)
+from asyncua import Client, Node
 
 # 로그 설정
 
@@ -17,8 +19,8 @@ SERVER_HOST = os.getenv("SERVER_HOST", "localhost")
 SERVER_PORT = os.getenv("SERVER_PORT", "4840")
 
 logging.basicConfig(level=logging.INFO, 
-                   format='%(asctime)s | %(message)s',
-                   datefmt='%H:%M:%S')
+                format='%(asctime)s | %(message)s',
+                datefmt='%H:%M:%S')
 _logger = logging.getLogger('asyncua')
 logging.getLogger("asyncua").setLevel(logging.WARNING)  # 불필요한 로그 감춤
 
@@ -110,7 +112,7 @@ class AirConditionerGUI(QMainWindow):
             await self.client.connect()
             
             # namespace 인덱스 가져오기
-            uri = "http://examples.freeopcua.github.io"
+            uri = "http://gaon.opcua.server"
             idx = await self.client.get_namespace_index(uri)
             
             # 노드 가져오기 - 수정된 부분

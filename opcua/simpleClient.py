@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
             await self.client.connect()
             
             # namespace 인덱스 찾기
-            uri = "http://examples.freeopcua.github.io"
+            uri = "http://gaon.opcua.server"
             idx = await self.client.get_namespace_index(uri)
             
             # 정확한 node path로 counter 변수 찾기

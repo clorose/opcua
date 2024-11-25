@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>OPC UA &#xd1b5;&#xc2e0; &#xad6c;&#xc870;</title>
+  <style>
+    /* From extension vscode.github */
+    /*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+    .vscode-dark img[src$=\#gh-light-mode-only],
+    .vscode-light img[src$=\#gh-dark-mode-only],
+    .vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+    .vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+      display: none;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet"
+    type="text/css">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+  <style>
+    .task-list-item {
+      list-style-type: none;
+    }
+
+    .task-list-item-checkbox {
+      margin-left: -20px;
+      vertical-align: middle;
+      pointer-events: none;
+    }
+  </style>
+  <style>
+    :root {
+      --color-note: #0969da;
+      --color-tip: #1a7f37;
+      --color-warning: #9a6700;
+      --color-severe: #bc4c00;
+      --color-caution: #d1242f;
+      --color-important: #8250df;
+    }
+  </style>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-note: #2f81f7;
+        --color-tip: #3fb950;
+        --color-warning: #d29922;
+        --color-severe: #db6d28;
+        --color-caution: #f85149;
+        --color-important: #a371f7;
+      }
+    }
+  </style>
+  <style>
+    .markdown-alert {
+      padding: 0.5rem 1rem;
+      margin-bottom: 16px;
+      color: inherit;
+      border-left: .25em solid #888;
+    }
+
+    .markdown-alert>:first-child {
+      margin-top: 0
+    }
+
+    .markdown-alert>:last-child {
+      margin-bottom: 0
+    }
+
+    .markdown-alert .markdown-alert-title {
+      display: flex;
+      font-weight: 500;
+      align-items: center;
+      line-height: 1
+    }
+
+    .markdown-alert .markdown-alert-title .octicon {
+      margin-right: 0.5rem;
+      display: inline-block;
+      overflow: visible !important;
+      vertical-align: text-bottom;
+      fill: currentColor;
+    }
+
+    .markdown-alert.markdown-alert-note {
+      border-left-color: var(--color-note);
+    }
+
+    .markdown-alert.markdown-alert-note .markdown-alert-title {
+      color: var(--color-note);
+    }
+
+    .markdown-alert.markdown-alert-important {
+      border-left-color: var(--color-important);
+    }
+
+    .markdown-alert.markdown-alert-important .markdown-alert-title {
+      color: var(--color-important);
+    }
+
+    .markdown-alert.markdown-alert-warning {
+      border-left-color: var(--color-warning);
+    }
+
+    .markdown-alert.markdown-alert-warning .markdown-alert-title {
+      color: var(--color-warning);
+    }
+
+    .markdown-alert.markdown-alert-tip {
+      border-left-color: var(--color-tip);
+    }
+
+    .markdown-alert.markdown-alert-tip .markdown-alert-title {
+      color: var(--color-tip);
+    }
+
+    .markdown-alert.markdown-alert-caution {
+      border-left-color: var(--color-caution);
+    }
+
+    .markdown-alert.markdown-alert-caution .markdown-alert-title {
+      color: var(--color-caution);
+    }
+  </style>
+
+</head>
+
+<body class="vscode-body vscode-light">
+  <h1 id="opc-ua-통신-구조">OPC UA 통신 구조</h1>
+  <p>OPC UA 서버를 통해 에어컨 하드웨어와 직접 통신하는 시스템을 구현합니다.</p>
+  <h2 id="1-nodeid-시스템-구현">1. NodeId 시스템 구현</h2>
+  <pre><code class="language-python"><span class="hljs-comment"># 계층적 구조의 NodeId 설정</span>
+objects = server.nodes.objects
+ac_system = <span class="hljs-keyword">await</span> objects.add_object(
+    ua.NodeId(<span class="hljs-string">&quot;AirConditioner&quot;</span>, idx),      <span class="hljs-comment"># 최상위 객체</span>
+    ua.QualifiedName(<span class="hljs-string">&quot;AirConditioner&quot;</span>, idx)
+)
+
+<span class="hljs-comment"># 하위 변수 노드들 생성</span>
+power = <span class="hljs-keyword">await</span> ac_system.add_variable(
+    ua.NodeId(<span class="hljs-string">&quot;AirConditioner.Power&quot;</span>, idx),  <span class="hljs-comment"># 계층 구조를 반영한 NodeId</span>
+    ua.QualifiedName(<span class="hljs-string">&quot;Power&quot;</span>, idx),
+    <span class="hljs-literal">False</span>
+)
+<span class="hljs-keyword">await</span> power.set_writable()
+
+temperature = <span class="hljs-keyword">await</span> ac_system.add_variable(
+    ua.NodeId(<span class="hljs-string">&quot;AirConditioner.Temperature&quot;</span>, idx),
+    ua.QualifiedName(<span class="hljs-string">&quot;Temperature&quot;</span>, idx),
+    <span class="hljs-number">24.0</span>
+)
+<span class="hljs-keyword">await</span> temperature.set_writable()
+</code></pre>
+  <ul>
+    <li><strong>계층적 NodeId 설정</strong>: <code>AirConditioner.Power</code>, <code>AirConditioner.Temperature</code> 등 계층
+      구조를 반영한 NodeId를 사용하여 명확한 네임스페이스를 구성합니다.</li>
+    <li><strong>변수 노드 생성 및 설정</strong>: <code>power</code>와 <code>temperature</code> 변수 노드를 생성하고, 쓰기 가능하도록 설정하여 외부에서 제어할
+      수 있게 합니다.</li>
+    <li><strong>최상위 객체 등록</strong>: <code>ac_system</code> 객체를 OPC UA 서버의 최상위 객체로 등록하여 에어컨 시스템의 루트로 사용합니다.</li>
+  </ul>
+  <h2 id="2-구독-시스템-구현">2. 구독 시스템 구현</h2>
+  <pre><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">SubscriptionHandler</span>:
+    <span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">datachange_notification</span>(<span class="hljs-params">self, node, val, data</span>):
+        <span class="hljs-keyword">try</span>:
+            name = (<span class="hljs-keyword">await</span> node.read_browse_name()).Name
+            _logger.info(<span class="hljs-string">&quot;DataChange: %s = %s&quot;</span>, name, val)
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            _logger.error(<span class="hljs-string">&quot;Error: %s&quot;</span>, e)
+
+<span class="hljs-comment"># 500ms 주기로 데이터 변경 감지</span>
+handler = SubscriptionHandler()
+subscription = <span class="hljs-keyword">await</span> server.create_subscription(<span class="hljs-number">500</span>, handler)
+<span class="hljs-keyword">await</span> subscription.subscribe_data_change([power, temperature])
+</code></pre>
+  <ul>
+    <li><strong>SubscriptionHandler 클래스</strong>: 데이터 변경 시 호출되는 콜백 함수를 포함하여 데이터 변경 사항을 처리합니다.</li>
+    <li><strong>데이터 변경 감지 주기 설정</strong>: 500ms 주기로 <code>power</code>와 <code>temperature</code> 노드의 변경 사항을 구독하여 실시간
+      모니터링을 구현합니다.</li>
+    <li><strong>예외 처리 및 로깅</strong>: 데이터 변경 처리 중 발생하는 예외를 처리하고, 변경 사항을 로깅하여 시스템의 안정성을 높입니다.</li>
+  </ul>
+  <h2 id="3-통신-루프-구현">3. 통신 루프 구현</h2>
+  <pre><code class="language-python"><span class="hljs-keyword">async</span> <span class="hljs-keyword">with</span> server:
+    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:
+        <span class="hljs-keyword">try</span>:
+            <span class="hljs-comment"># NodeId를 통한 데이터 접근</span>
+            is_power_on = <span class="hljs-keyword">await</span> power.read_value()
+            current_temp = <span class="hljs-keyword">await</span> temperature.read_value()
+            
+            <span class="hljs-keyword">if</span> changed:
+                <span class="hljs-keyword">await</span> handle_state_change(is_power_on, current_temp)
+                
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            _logger.error(<span class="hljs-string">&quot;Error: %s&quot;</span>, <span class="hljs-built_in">str</span>(e))
+        
+        <span class="hljs-keyword">await</span> asyncio.sleep(<span class="hljs-number">1</span>)
+</code></pre>
+  <ul>
+    <li><strong>비동기 통신 루프</strong>: <code>asyncio</code>를 활용하여 서버와의 비동기 통신 루프를 구성합니다.</li>
+    <li><strong>데이터 읽기 및 상태 변경 처리</strong>: <code>power</code>와 <code>temperature</code>의 현재 값을 읽어와 상태 변경이 있으면
+      <code>handle_state_change</code> 함수를 호출합니다.</li>
+    <li><strong>예외 처리 및 로깅</strong>: 통신 중 발생하는 예외를 처리하고 에러를 로깅하여 시스템의 신뢰성을 유지합니다.</li>
+  </ul>
+  <h2 id="주요-특징">주요 특징</h2>
+  <h3 id="nodeid-시스템">NodeId 시스템</h3>
+  <ul>
+    <li><strong>계층적 구조 설계</strong>: NodeId를 계층적으로 설계하여 에어컨 시스템의 각 구성 요소에 대한 명확한 식별자를 제공합니다.</li>
+    <li><strong>클라이언트 접근성 향상</strong>: 모든 클라이언트가 동일한 NodeId를 사용하여 일관된 방식으로 서버에 접근할 수 있습니다.</li>
+    <li><strong>다양한 클라이언트 지원</strong>: Python, Kotlin 등 다양한 언어의 클라이언트에서 동일한 NodeId를 사용하여 서버와 통신합니다.</li>
+  </ul>
+  <h3 id="구독-기반-통신">구독 기반 통신</h3>
+  <ul>
+    <li><strong>실시간 데이터 동기화</strong>: 구독 시스템을 통해 500ms 주기로 데이터 변경 사항을 감지하여 실시간 동기화를 구현합니다.</li>
+    <li><strong>효율적인 리소스 사용</strong>: 관심 있는 노드만 구독하여 네트워크 및 시스템 리소스를 효율적으로 사용합니다.</li>
+    <li><strong>확장성</strong>: 구독 노드를 쉽게 추가하거나 제거할 수 있어 시스템 확장에 용이합니다.</li>
+  </ul>
+  <hr>
+  <h1 id="opc-ua-bridge-구현">OPC UA Bridge 구현</h1>
+  <p>OPC UA 서버와 RESTful API 간의 프로토콜 브릿지를 구현하여 에어컨 제어 기능을 제공합니다.</p>
+  <h2 id="1-프로토콜-브릿지-설정">1. 프로토콜 브릿지 설정</h2>
+  <pre><code class="language-kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AirConditionerController</span> </span>{
+    <span class="hljs-keyword">companion</span> <span class="hljs-keyword">object</span> {
+        <span class="hljs-keyword">private</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">val</span> NAMESPACE_URI = <span class="hljs-string">&quot;http://gaon.opcua.server&quot;</span>
+        <span class="hljs-keyword">private</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">val</span> ENDPOINT_URL = <span class="hljs-string">&quot;opc.tcp://localhost:4840/freeopcua/server/&quot;</span>
+    }
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">lateinit</span> <span class="hljs-keyword">var</span> client: OpcUaClient
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> nodeCache = ConcurrentHashMap&lt;String, NodeId&gt;()
+}
+</code></pre>
+  <ul>
+    <li><strong>네임스페이스 및 엔드포인트 설정</strong>: <code>NAMESPACE_URI</code>와 <code>ENDPOINT_URL</code>을 정의하여 OPC UA 서버의
+      네임스페이스와 엔드포인트를 설정합니다.</li>
+    <li><strong>OPC UA 클라이언트 초기화</strong>: <code>OpcUaClient</code> 인스턴스를 선언하여 OPC UA 서버와의 통신을 준비합니다.</li>
+    <li><strong>NodeId 캐싱</strong>: <code>nodeCache</code>를 사용하여 <code>NodeId</code>를 캐싱함으로써 성능을 향상시킵니다.</li>
+  </ul>
+  <h2 id="2-opc-ua--rest-변환-계층">2. OPC UA ↔ REST 변환 계층</h2>
+  <pre><code class="language-kotlin"><span class="hljs-comment">// REST -&gt; OPC UA (쓰기 작업)</span>
+<span class="hljs-meta">@PostMapping(<span class="hljs-string">&quot;/power&quot;</span>)</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">togglePower</span><span class="hljs-params">(<span class="hljs-meta">@RequestBody</span> power: <span class="hljs-type">Map</span>&lt;<span class="hljs-type">String</span>, <span class="hljs-built_in">Boolean</span>&gt;)</span></span>: ResponseEntity&lt;Any&gt; {
+    <span class="hljs-keyword">val</span> powerState = power[<span class="hljs-string">&quot;power&quot;</span>] ?: <span class="hljs-keyword">throw</span> IllegalArgumentException(<span class="hljs-string">&quot;Power state not provided&quot;</span>)
+    <span class="hljs-keyword">val</span> nodeId = getNodeId(<span class="hljs-string">&quot;Power&quot;</span>)
+    <span class="hljs-keyword">val</span> value = DataValue(Variant(powerState))
+    client.writeValue(nodeId, value).<span class="hljs-keyword">get</span>()
+    <span class="hljs-keyword">return</span> ResponseEntity.ok(mapOf(<span class="hljs-string">&quot;success&quot;</span> to <span class="hljs-literal">true</span>, <span class="hljs-string">&quot;power&quot;</span> to powerState))
+}
+
+<span class="hljs-comment">// OPC UA -&gt; REST (읽기 작업)</span>
+<span class="hljs-meta">@GetMapping(<span class="hljs-string">&quot;/status&quot;</span>)</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">getStatus</span><span class="hljs-params">()</span></span>: ResponseEntity&lt;AirConditionerStatusDto&gt; {
+    <span class="hljs-keyword">val</span> currentTemp = readValue(<span class="hljs-string">&quot;CurrentTemperature&quot;</span>)?.value?.value <span class="hljs-keyword">as</span>? <span class="hljs-built_in">Double</span>
+    <span class="hljs-keyword">val</span> targetTemp = readValue(<span class="hljs-string">&quot;TargetTemperature&quot;</span>)?.value?.value <span class="hljs-keyword">as</span>? <span class="hljs-built_in">Double</span>
+    <span class="hljs-keyword">val</span> power = readValue(<span class="hljs-string">&quot;Power&quot;</span>)?.value?.value <span class="hljs-keyword">as</span>? <span class="hljs-built_in">Boolean</span>
+    
+    <span class="hljs-keyword">return</span> ResponseEntity.ok(AirConditionerStatusDto(
+        currentTemperature = currentTemp ?: <span class="hljs-number">0.0</span>,
+        targetTemperature = targetTemp ?: <span class="hljs-number">24.0</span>,
+        power = power ?: <span class="hljs-literal">false</span>
+    ))
+}
+</code></pre>
+  <ul>
+    <li><strong>전원 제어 API</strong>: <code>/power</code> 엔드포인트를 통해 RESTful API로 전원 상태를 토글할 수 있습니다.
+      <ul>
+        <li>요청 바디에서 <code>power</code> 상태를 받아와 OPC UA 서버의 해당 노드에 값을 씁니다.</li>
+      </ul>
+    </li>
+    <li><strong>상태 조회 API</strong>: <code>/status</code> 엔드포인트를 통해 현재 에어컨 상태를 조회할 수 있습니다.
+      <ul>
+        <li>OPC UA 서버에서 필요한 값을 읽어와 DTO 형태로 응답합니다.</li>
+      </ul>
+    </li>
+    <li><strong>에러 처리</strong>: 요청된 데이터가 없을 경우 <code>IllegalArgumentException</code>을 발생시켜 오류를 처리합니다.</li>
+  </ul>
+  <h2 id="3-프로토콜-변환-유틸리티">3. 프로토콜 변환 유틸리티</h2>
+  <pre><code class="language-kotlin"><span class="hljs-comment">// OPC UA 통신용 NodeId 관리</span>
+<span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">getNodeId</span><span class="hljs-params">(identifier: <span class="hljs-type">String</span>)</span></span>: NodeId {
+    <span class="hljs-keyword">return</span> nodeCache.computeIfAbsent(identifier) {
+        <span class="hljs-keyword">val</span> namespaceIndex = client.namespaceTable.getIndex(NAMESPACE_URI)
+        NodeId(namespaceIndex!!, <span class="hljs-string">&quot;AirConditioner.<span class="hljs-variable">$identifier</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// OPC UA 데이터 읽기 작업 추상화</span>
+<span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">readValue</span><span class="hljs-params">(identifier: <span class="hljs-type">String</span>)</span></span>: DataValue? {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">try</span> {
+        <span class="hljs-keyword">val</span> nodeId = getNodeId(identifier)
+        client.readValue(<span class="hljs-number">0.0</span>, TimestampsToReturn.Both, nodeId).<span class="hljs-keyword">get</span>()
+    } <span class="hljs-keyword">catch</span> (e: Exception) {
+        logger.error(<span class="hljs-string">&quot;Failed to read value for <span class="hljs-variable">$identifier</span>&quot;</span>, e)
+        <span class="hljs-literal">null</span>
+    }
+}
+</code></pre>
+  <ul>
+    <li><strong>NodeId 관리</strong>: <code>getNodeId</code> 함수는 주어진 식별자에 대한 <code>NodeId</code>를 반환하며, 캐시를 활용하여 성능을
+      향상시킵니다.</li>
+    <li><strong>데이터 읽기 추상화</strong>: <code>readValue</code> 함수는 특정 노드의 값을 읽어오는 작업을 추상화하여 코드의 재사용성을 높입니다.</li>
+    <li><strong>예외 처리 및 로깅</strong>: 예외 발생 시 에러를 로깅하고 <code>null</code>을 반환하여 안정적인 동작을 유지합니다.</li>
+  </ul>
+  <h2 id="주요-특징-1">주요 특징</h2>
+  <h3 id="프로토콜-브릿징">프로토콜 브릿징</h3>
+  <ul>
+    <li><strong>HTTP/REST ↔ OPC UA 변환</strong>: RESTful API 요청을 OPC UA 통신으로 변환하여 에어컨 제어를 가능하게 합니다.</li>
+    <li><strong>데이터 타입 변환</strong>: DTO와 OPC UA의 <code>DataValue</code> 간의 변환을 처리하여 데이터 일관성을 유지합니다.</li>
+    <li><strong>에러 코드 매핑</strong>: OPC UA에서 발생하는 에러를 HTTP 상태 코드로 매핑하여 클라이언트에게 명확한 오류 정보를 제공합니다.</li>
+  </ul>
+  <h3 id="성능-최적화">성능 최적화</h3>
+  <ul>
+    <li><strong>NodeId 캐싱</strong>: <code>NodeId</code>를 캐싱하여 반복적인 네임스페이스 조회를 줄이고 성능을 향상시킵니다.</li>
+    <li><strong>연결 재사용</strong>: OPC UA 클라이언트의 연결을 유지하고 재사용하여 연결 설정에 따른 오버헤드를 최소화합니다.</li>
+    <li><strong>비동기 처리</strong>: 비동기 작업을 효율적으로 처리하여 서버의 응답 시간을 단축하고 자원을 효율적으로 사용합니다.</li>
+  </ul>
+  <h3 id="오류-처리-및-복구">오류 처리 및 복구</h3>
+  <ul>
+    <li><strong>자동 재연결</strong>: 연결 실패 시 자동으로 재연결하여 서비스의 가용성을 높입니다.</li>
+    <li><strong>에러 변환</strong>: 프로토콜별로 적절한 에러 변환을 수행하여 오류 상황에서도 시스템의 일관성을 유지합니다.</li>
+    <li><strong>상세 로깅</strong>: 상세한 로그를 남겨 디버깅과 모니터링을 용이하게 합니다.</li>
+  </ul>
+  <hr>
+  <h1 id="nextjs-클라이언트-핵심-구현">Next.js 클라이언트 핵심 구현</h1>
+  <p>Next.js를 사용하여 에어컨 제어 UI를 구현하고, 브릿지 서버와 통신하여 상태 관리 및 제어 기능을 제공합니다.</p>
+  <h2 id="1-상태-관리-및-통신">1. 상태 관리 및 통신</h2>
+  <pre><code class="language-typescript"><span class="hljs-keyword">interface</span> <span class="hljs-title class_">ACStatus</span> {
+  <span class="hljs-attr">currentTemperature</span>: <span class="hljs-built_in">number</span>;
+  <span class="hljs-attr">targetTemperature</span>: <span class="hljs-built_in">number</span>;
+  <span class="hljs-attr">humidity</span>: <span class="hljs-built_in">number</span>;
+  <span class="hljs-attr">powerUsage</span>: <span class="hljs-built_in">number</span>;
+  <span class="hljs-attr">electricityCost</span>: <span class="hljs-built_in">number</span>;
+  <span class="hljs-attr">power</span>: <span class="hljs-built_in">boolean</span>;
+}
+
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">ACControlPanel</span> = (<span class="hljs-params"></span>) =&gt; {
+  <span class="hljs-keyword">const</span> [status, setStatus] = useState&lt;<span class="hljs-title class_">ACStatus</span> | <span class="hljs-literal">null</span>&gt;(<span class="hljs-literal">null</span>);
+  <span class="hljs-keyword">const</span> [targetTemp, setTargetTemp] = <span class="hljs-title function_">useState</span>(<span class="hljs-number">24</span>);
+
+  <span class="hljs-comment">// 실시간 상태 갱신 (1초마다 서버에서 최신 상태 받아옴)</span>
+  <span class="hljs-title function_">useEffect</span>(<span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">const</span> <span class="hljs-title function_">fetchStatus</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt; {
+      <span class="hljs-keyword">const</span> { data } = <span class="hljs-keyword">await</span> axios.<span class="hljs-property">get</span>&lt;<span class="hljs-title class_">ACStatus</span>&gt;(<span class="hljs-string">&quot;/api/ac/status&quot;</span>);
+      <span class="hljs-title function_">setStatus</span>(data);
+    };
+    <span class="hljs-keyword">const</span> interval = <span class="hljs-built_in">setInterval</span>(fetchStatus, <span class="hljs-number">1000</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> <span class="hljs-built_in">clearInterval</span>(interval);
+  }, []);
+}
+</code></pre>
+  <ul>
+    <li><strong>상태 인터페이스 정의</strong>: <code>ACStatus</code> 인터페이스를 통해 에어컨의 상태를 타입으로 관리합니다.</li>
+    <li><strong>상태 변수 초기화</strong>: <code>useState</code>를 사용하여 현재 상태(<code>status</code>)와 목표
+      온도(<code>targetTemp</code>)를 관리합니다.</li>
+    <li><strong>실시간 상태 갱신</strong>: <code>useEffect</code>를 활용하여 1초마다 서버에서 최신 상태를 받아와 상태를 업데이트합니다.</li>
+    <li><strong>비동기 통신</strong>: <code>axios</code>를 사용하여 비동기적으로 API를 호출합니다.</li>
+  </ul>
+  <h2 id="2-api-routes-브릿지-서버와의-통신-처리">2. API Routes (브릿지 서버와의 통신 처리)</h2>
+  <pre><code class="language-typescript"><span class="hljs-comment">// 상태 조회 API</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">GET</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">const</span> { data } = <span class="hljs-keyword">await</span> axios.<span class="hljs-title function_">get</span>(<span class="hljs-variable constant_">API_BASE_URL</span> + <span class="hljs-string">&#x27;/status&#x27;</span>)
+  <span class="hljs-keyword">return</span> <span class="hljs-title class_">NextResponse</span>.<span class="hljs-title function_">json</span>(data)
+}
+
+<span class="hljs-comment">// 온도 제어 API</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">POST</span>(<span class="hljs-params">request: Request</span>) {
+  <span class="hljs-keyword">const</span> { temperature } = <span class="hljs-keyword">await</span> request.<span class="hljs-title function_">json</span>()
+  <span class="hljs-keyword">if</span> (temperature &lt; <span class="hljs-number">18</span> || temperature &gt; <span class="hljs-number">30</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-title class_">NextResponse</span>.<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: <span class="hljs-string">&#x27;Invalid range&#x27;</span> }, { <span class="hljs-attr">status</span>: <span class="hljs-number">400</span> })
+  }
+  <span class="hljs-keyword">const</span> { data } = <span class="hljs-keyword">await</span> axios.<span class="hljs-title function_">post</span>(<span class="hljs-variable constant_">API_BASE_URL</span> + <span class="hljs-string">&#x27;/temperature&#x27;</span>, { temperature })
+  <span class="hljs-keyword">return</span> <span class="hljs-title class_">NextResponse</span>.<span class="hljs-title function_">json</span>(data)
+}
+</code></pre>
+  <ul>
+    <li><strong>상태 조회 엔드포인트</strong>: <code>GET</code> 메서드를 통해 클라이언트에서 에어컨의 현재 상태를 조회할 수 있습니다.
+      <ul>
+        <li>브릿지 서버의 <code>/status</code> 엔드포인트를 호출하여 데이터를 가져옵니다.</li>
+      </ul>
+    </li>
+    <li><strong>온도 설정 엔드포인트</strong>: <code>POST</code> 메서드를 통해 목표 온도를 설정할 수 있습니다.
+      <ul>
+        <li>요청된 온도가 유효한 범위(18-30℃)인지 검증합니다.</li>
+        <li>브릿지 서버의 <code>/temperature</code> 엔드포인트로 데이터를 전달합니다.</li>
+      </ul>
+    </li>
+    <li><strong>에러 처리</strong>: 유효하지 않은 입력에 대해 적절한 HTTP 상태 코드와 에러 메시지를 반환합니다.</li>
+  </ul>
+  <h2 id="3-제어-로직-사용자-액션-처리">3. 제어 로직 (사용자 액션 처리)</h2>
+  <pre><code class="language-typescript"><span class="hljs-keyword">const</span> <span class="hljs-title function_">ACControlPanel</span> = (<span class="hljs-params"></span>) =&gt; {
+  <span class="hljs-comment">// 전원 ON/OFF 제어</span>
+  <span class="hljs-keyword">const</span> <span class="hljs-title function_">handlePowerToggle</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt; {
+    <span class="hljs-keyword">await</span> axios.<span class="hljs-title function_">post</span>(<span class="hljs-string">&quot;/api/ac/power&quot;</span>, { <span class="hljs-attr">power</span>: !status?.<span class="hljs-property">power</span> });
+  };
+
+  <span class="hljs-comment">// 설정 온도 변경</span>
+  <span class="hljs-keyword">const</span> <span class="hljs-title function_">handleTemperatureChange</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt; {
+    <span class="hljs-keyword">if</span> (targetTemp &gt;= <span class="hljs-number">18</span> &amp;&amp; targetTemp &lt;= <span class="hljs-number">30</span>) {
+      <span class="hljs-keyword">await</span> axios.<span class="hljs-title function_">post</span>(<span class="hljs-string">&quot;/api/ac/temperature&quot;</span>, { <span class="hljs-attr">temperature</span>: targetTemp });
+    }
+  };
+</code></pre>
+  <ul>
+    <li><strong>전원 토글 기능</strong>: <code>handlePowerToggle</code> 함수는 전원 상태를 토글하는 역할을 합니다.
+      <ul>
+        <li>현재 상태의 <code>power</code> 값을 반전시켜 API에 전달합니다.</li>
+      </ul>
+    </li>
+    <li><strong>온도 변경 기능</strong>: <code>handleTemperatureChange</code> 함수는 목표 온도를 변경합니다.
+      <ul>
+        <li>입력된 온도가 유효한 범위인지 확인한 후 API에 요청을 보냅니다.</li>
+      </ul>
+    </li>
+    <li><strong>사용자 인터랙션 처리</strong>: 사용자 액션에 따라 적절한 API를 호출하여 상태를 변경합니다.</li>
+  </ul>
+  <h2 id="주요-특징-2">주요 특징</h2>
+  <h3 id="데이터-흐름">데이터 흐름</h3>
+  <ul>
+    <li><strong>클라이언트-서버 통신</strong>: UI 컴포넌트에서 API Routes를 통해 브릿지 서버와 통신합니다.</li>
+    <li><strong>실시간 상태 업데이트</strong>: <code>useEffect</code>를 활용한 주기적인 상태 갱신으로 최신 정보를 표시합니다.</li>
+    <li><strong>즉각적인 피드백</strong>: 제어 명령 후 즉시 상태를 갱신하여 사용자에게 빠른 피드백을 제공합니다.</li>
+  </ul>
+  <h3 id="데이터-유효성-검증">데이터 유효성 검증</h3>
+  <ul>
+    <li><strong>클라이언트 측 검증</strong>: 입력된 데이터의 유효성을 검증하여 오류를 사전에 방지합니다.</li>
+    <li><strong>서버 측 추가 검증</strong>: API Routes에서도 유효성 검사를 수행하여 데이터의 무결성을 유지합니다.</li>
+    <li><strong>다단계 검증</strong>: 클라이언트와 서버에서 모두 검증을 수행하여 시스템의 안정성을 향상시킵니다.</li>
+  </ul>
+  <h3 id="에러-처리">에러 처리</h3>
+  <ul>
+    <li><strong>예외 처리 구현</strong>: API 요청 실패 시 예외 처리를 통해 사용자에게 에러 메시지를 제공합니다.</li>
+    <li><strong>안정성 향상</strong>: 네트워크 오류나 서버 오류에 대한 복구 메커니즘을 구현하여 안정적인 사용자 경험을 제공합니다.</li>
+    <li><strong>로깅 및 디버깅 지원</strong>: 로깅을 통해 문제 발생 시 빠르게 대응할 수 있도록 지원합니다.</li>
+  </ul>
+
+  <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
+
+</body>
+
+</html>
